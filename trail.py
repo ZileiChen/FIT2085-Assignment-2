@@ -25,7 +25,8 @@ class TrailSplit:
 
     def remove_branch(self) -> TrailStore:
         """Removes the branch, should just leave the remaining following trail."""
-        raise NotImplementedError()
+        self = self.path_follow.store
+        return self
 
 @dataclass
 class TrailSeries:
@@ -45,21 +46,33 @@ class TrailSeries:
 
     def add_mountain_before(self, mountain: Mountain) -> TrailStore:
         """Adds a mountain in series before the current one."""
-        raise NotImplementedError()
+        # Add old TrailStore following element
+        new_branch = Trail(TrailSeries(self.mountain,self.following))
+        self.following = new_branch
+        # Add new mountain to mountain element
+        self.mountain = mountain
+        return self
 
     def add_empty_branch_before(self) -> TrailStore:
         """Adds an empty branch, where the current trailstore is now the following path."""
-        raise NotImplementedError()
+        self.following = Trail(TrailSeries(self.mountain,self.following))
+        self.mountain = Trail(TrailSplit(Trail(None),Trail(None)),self)
 
     def add_mountain_after(self, mountain: Mountain) -> TrailStore:
         """Adds a mountain after the current mountain, but before the following trail."""
-        raise NotImplementedError()
+        # Create a new TrailSeries containing: new mountain & old following
+        new_mountain = Trail(TrailSeries(mountain, self.following))
+        # Add this new TrailSeries to the following of the current TrailSeries
+        self.following = new_mountain
+        return self
 
     def add_empty_branch_after(self) -> TrailStore:
         """Adds an empty branch after the current mountain, but before the following trail."""
+        # Create a new TrailSplit containing: new branch & old following
         new_branch = Trail(TrailSplit(Trail(None),Trail(None),self.following))
+        # Add this new TrailSplit to the following of the current TrailSeries
         self.following = new_branch
-        return TrailStore
+        return self
 
 TrailStore = Union[TrailSplit, TrailSeries, None]
 
