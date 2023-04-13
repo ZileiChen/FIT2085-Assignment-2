@@ -23,9 +23,11 @@ class TrailSplit:
     path_bottom: Trail
     path_follow: Trail
 
-    def remove_branch(self) -> TrailStore:
+    def remove_branch(self) -> TrailStore: #Note: its either return self or return self.path_follow (not sure yet)
         """Removes the branch, should just leave the remaining following trail."""
-        raise NotImplementedError()
+        self.path_top = None
+        self.path_bottom = None
+        return self
 
 @dataclass
 class TrailSeries:
@@ -39,13 +41,16 @@ class TrailSeries:
     mountain: Mountain
     following: Trail
 
-    def remove_mountain(self) -> TrailStore:
+    def remove_mountain(self) -> TrailStore: # Similarly to remove its either the current implementation or simple return Trail
         """Removes the mountain at the beginning of this series."""
-        raise NotImplementedError()
+        self.mountain = None
+        return self
 
     def add_mountain_before(self, mountain: Mountain) -> TrailStore:
         """Adds a mountain in series before the current one."""
-        raise NotImplementedError()
+        self.following = self
+        self.mountain = mountain
+        return self
 
     def add_empty_branch_before(self) -> TrailStore:
         """Adds an empty branch, where the current trailstore is now the following path."""
