@@ -25,7 +25,7 @@ class TrailSplit:
 
     def remove_branch(self) -> TrailStore:
         """Removes the branch, should just leave the remaining following trail."""
-        return self.path_follow
+        return self.path_follow.store
 
 @dataclass
 class TrailSeries:
@@ -41,8 +41,7 @@ class TrailSeries:
 
     def remove_mountain(self) -> TrailStore: # Similarly to remove its either the current implementation or simple return Trail
         """Removes the mountain at the beginning of this series."""
-        self.mountain = None
-        return self
+        return self.following.store
 
     def add_mountain_before(self, mountain: Mountain) -> TrailStore:
         """Adds a mountain in series before the current one."""
@@ -52,17 +51,27 @@ class TrailSeries:
 
     def add_empty_branch_before(self) -> TrailStore:
         """Adds an empty branch, where the current trailstore is now the following path."""
-        raise NotImplementedError()
+        # Contruct a new splitted trail containing a new branch & the old trail
+        new_trail = TrailSplit(Trail(None),Trail(None),Trail(self))
+        return new_trail
 
     def add_mountain_after(self, mountain: Mountain) -> TrailStore:
         """Adds a mountain after the current mountain, but before the following trail."""
-        raise NotImplementedError()
+        # Current mountain remains the same
+        # The new following trail contain a new mountain & the old following trail
+        new_following = Trail(TrailSeries(mountain,self.following))
+        # Contruct a complete trail
+        new_trail = TrailSeries(self.mountain,new_following)
+        return new_trail
 
     def add_empty_branch_after(self) -> TrailStore:
         """Adds an empty branch after the current mountain, but before the following trail."""
-        new_branch = Trail(TrailSplit(Trail(None),Trail(None),self.following))
-        self.following = new_branch
-        return TrailStore
+        # Current mountain remains the same
+        # Create a new following trail containing new branch & the old following trail
+        new_following = Trail(TrailSplit(Trail(None),Trail(None),self.following))
+        # Contruct a complete trail
+        new_trail = TrailSeries(self.mountain,new_following)
+        return new_trail
 
 TrailStore = Union[TrailSplit, TrailSeries, None]
 
