@@ -28,7 +28,32 @@ class DoubleKeyTable(Generic[K1, K2, V]):
     HASH_BASE = 31
 
     def __init__(self, sizes:list|None=None, internal_sizes:list|None=None) -> None:
-        raise NotImplementedError()
+        # Creates a double has table with dimensions sizes*internal_sizes
+        """
+        check if sizes and internal sizes are none
+        if they are none, then use the default list for both internal and outer
+
+        """
+
+        """
+        self.INTERNAL_TABLE_SIZES = self.TABLE_SIZES
+        if sizes is not None:
+            self.TABLE_SIZES = sizes
+        if internal_sizes is not None:
+            self.INTERNAL_TABLE_SIZES = internal_sizes
+        self.size_index = 0
+        self.internal_size_index = 0
+
+        self.array = ArrayR(self.TABLE_SIZES[self.size_index])
+        for i in range(self.TABLE_SIZES[self.size_index]):
+            self.array[i] = ArrayR(self.INTERNAL_TABLE_SIZES[self.internal_size_index])
+        """
+
+        # not sure which implementation is better, but i think it should be the one below
+        # im not too sure
+        self.array = LinearProbeTable(sizes)
+        for i in range(len(self.array)):
+            self.array[i][1] = LinearProbeTable(internal_sizes) # index: [position][key/value], where value is another hashmap
 
     def hash1(self, key: K1) -> int:
         """
@@ -65,7 +90,26 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         :raises KeyError: When the key pair is not in the table, but is_insert is False.
         :raises FullError: When a table is full and cannot be inserted.
         """
-        raise NotImplementedError()
+        outer_pos = self.hash1(key1)
+        sub_table = self.array[outer_pos]
+        inner_pos = self.hash2(key2, sub_table)
+
+        for _ in range(self.table_size):
+            if self.array[outer_pos][1][inner_pos] is None:
+                if is_insert:
+                    return inner_pos
+                else:
+                    raise KeyError(key1, key2)
+            elif self.array[outer_pos][1][inner_pos][0] == key2:
+                return inner_pos
+            else:
+                # Taken by something else. Time to linear probe.
+                inner_pos = (inner_pos + 1) % self.array[outer_pos][1].table_size
+
+        if is_insert:
+            raise FullError("Table is full!")
+        else:
+            raise KeyError(key1, key2)
 
     def iter_keys(self, key:K1|None=None) -> Iterator[K1|K2]:
         """
@@ -81,7 +125,20 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         key = None: returns all top-level keys in the table.
         key = x: returns all bottom-level keys for top-level key x.
         """
-        raise NotImplementedError()
+        # not sure if list is allowed here
+        result = list
+        if key is None:
+            for i in range(len(self.array)):
+                if self.array[i][0] is not None:
+                    result.append(self.array[i][0])
+            return result
+        position = self.hash1(key)
+        for i in range(len(self.array[position][0])):
+            if self.array[position][1][i][0] is not None:
+                result.append(self.array[position][1][i][0])
+        return result
+
+
 
     def iter_values(self, key:K1|None=None) -> Iterator[V]:
         """
@@ -97,7 +154,18 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         key = None: returns all values in the table.
         key = x: returns all values for top-level key x.
         """
-        raise NotImplementedError()
+        # not sure if list is allowed here
+        result = list
+        if key is None:
+            for i in range(len(self.array)):
+                if self.array[i][0] is not None:
+                    result.append(self.array[i][1])
+            return result
+        position = self.hash1(key)
+        for i in range(len(self.array[position][0])):
+            if self.array[position][1][i][0] is not None:
+                result.append(self.array[position][1][i][1])
+        return result
 
     def __contains__(self, key: tuple[K1, K2]) -> bool:
         """
