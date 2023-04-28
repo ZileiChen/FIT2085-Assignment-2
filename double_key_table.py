@@ -51,8 +51,8 @@ class DoubleKeyTable(Generic[K1, K2, V]):
             self.table[i] = ArrayR(self.INTERNAL_TABLE_SIZES[self.internal_size_index])
         """
         self.table = None
-        self.table = LinearProbeTable(sizes)
-        self.table.hash = lambda k: self.hash1(k)
+        # self.table = LinearProbeTable(sizes)
+        # self.table.hash = lambda k: self.hash1(k)
         self.internal_sizes = internal_sizes
         self.sizes = sizes
 
@@ -92,9 +92,9 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         :raises KeyError: When the key pair is not in the table, but is_insert is False.
         :raises FullError: When a table is full and cannot be inserted.
         """
-        # if self.table is None:
-        #     self.table = LinearProbeTable(self.sizes)
-        #     self.table.hash = lambda k: self.hash1(k)
+        if self.table is None:
+            self.table = LinearProbeTable(self.sizes)
+            self.table.hash = lambda k: self.hash1(k)
 
 
         outer_pos = self.table._linear_probe(key1, is_insert)
@@ -110,7 +110,6 @@ class DoubleKeyTable(Generic[K1, K2, V]):
                 raise KeyError(key1)
         else:
             sub_table = self.table.array[outer_pos][1]
-            # sub_table.hash = lambda k: self.hash2(k, sub_table)
             inner_pos = sub_table._linear_probe(key2, is_insert)
         return (outer_pos, inner_pos)
 
@@ -179,14 +178,15 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         """
         result = list
         if key is None:
-            for i in range(len(self.table)):
-                if self.table[i][0] is not None:
-                    result.append(self.table[i][0])
+            for i in range(self.table.table_size()):
+                if self.table.array[i] is not None:
+                    result.append(self.table.array[i][0])
             return result
         position = self.table._linear_probe(key, False)
-        for i in range(len(self.table[position][0])):
-            if self.table[position][1][i][0] is not None:
-                result.append(self.table[position][1][i][0])
+        sub_table = self.table.array[position][1]
+        for i in range(sub_table.table_size()):
+            if sub_table.array[i] is not None:
+                result.append(sub_table.array[i][0])
         return result
 
     def iter_values(self, key: K1 | None = None) -> Iterator[V]:
@@ -247,21 +247,22 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         positions = self._linear_probe(key[0], key[1], True)
         pos1 = positions[0]
         pos2 = positions[1]
-        # sub_table = self.table.array[pos1][1]
-        # sub_table[key[1]] = data
-        # self.table[key[0]] = sub_table
 
-        self.table.array[pos1][0] = key[0]
-        self.table.count += 1
-        self.table.array[pos1][1].array[pos2] = (key[1], data)
-        self.table.array[pos1][1].count += 1
+        if self.table.array[pos1][1].is_empty():
+            self.table.array[pos1][0] = key[0]
+            self.table.count += 1
 
-        # sub_table = self.table.array[pos1][1]
-        # if len(sub_table) > sub_table.table_size / 2:
-        #     sub_table._rehash()
-        #
-        # if len(self.table) > self.table_size / 2:
-        #     self.table._rehash()
+        if self.table.array[pos1][1].array[pos2] is None:
+            self.table.array[pos1][1].array[pos2] = (key[1], data)
+            self.table.array[pos1][1].count += 1
+
+        sub_table = self.table.array[pos1][1]
+        if len(sub_table) > sub_table.table_size/ 2:
+            sub_table._rehash()
+
+        print(len(self.table))
+        if len(self.table) > self.table_size / 2:
+            self.table._rehash()
 
     def __delitem__(self, key: tuple[K1, K2]) -> None:
         """
@@ -321,7 +322,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         """
         Return the current size of the table (different from the length)
         """
-        return len(self.table)
+        return len(self.table.array)
 
     def __len__(self) -> int:
         """
