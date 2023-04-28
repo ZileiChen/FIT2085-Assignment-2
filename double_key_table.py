@@ -51,12 +51,9 @@ class DoubleKeyTable(Generic[K1, K2, V]):
             self.array[i] = ArrayR(self.INTERNAL_TABLE_SIZES[self.internal_size_index])
         """
 
-        # not sure which implementation is better, but i think it should be the one below
-        # im not too sure
-        self.array = LinearProbeTable(sizes)
-        for i in range(len(self.array)):
-            self.array[i][1] = LinearProbeTable(
-                internal_sizes)  # index: [position][key/value], where value is another hashmap
+        self.array = LinearProbeTable(sizes) #Taking the array created from linear probe table
+        for i in range(self.array.table_size):
+            self.array.array[i][1] = LinearProbeTable(internal_sizes)  # index: [position][key/value], where value is another hashmap
 
     def hash1(self, key: K1) -> int:
         """
@@ -93,10 +90,45 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         :raises KeyError: When the key pair is not in the table, but is_insert is False.
         :raises FullError: When a table is full and cannot be inserted.
         """
-        outer_pos = self.array._linear_probe(key1, is_insert)
-        sub_table = self.array[outer_pos]
-        inner_pos = sub_table._linear_probe(key2, is_insert)
-        return [outer_pos, inner_pos]
+        # outer_pos = self.array._linear_probe(key1, is_insert)
+        # sub_table = self.array[outer_pos][1]
+        # inner_pos = sub_table._linear_probe(key2, is_insert)
+        # return [outer_pos, inner_pos]
+
+        # Initial position outer hash table
+        position_outer = self.hash1(key1)
+
+        for _ in range(self.array.table_size):
+            if self.array[position_outer] is None:
+                # Empty spot. Am I upserting or retrieving?
+                if not is_insert:
+                    raise KeyError(key1)
+            elif self.array[position_outer][0] != key1:
+                position_outer = (position_outer + 1) % self.table_size
+
+        if is_insert:
+            raise FullError("Table is full!")
+        else:
+            raise KeyError(key1)
+
+        # Initial position inner hash table
+        position_inner = self.hash2(key2)
+
+        for _ in range(self.array[position_outer][1].tablesize):
+            if self.array[position_inner] is None:
+                # Empty spot. Am I upserting or retrieving?
+                if not is_insert:
+                    raise KeyError(key2)
+            elif self.array[position_inner][0] != key2:
+                position_inner = (position_inner + 1) % self.table_size
+
+        if is_insert:
+            raise FullError("Table is full!")
+        else:
+            raise KeyError(key2)
+
+        return [position_outer, position_inner]
+
 
     def iter_keys(self, key: K1 | None = None) -> Iterator[K1 | K2]:
         """
@@ -174,13 +206,13 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         positions = self._linear_probe(K1, K2, False)
         pos1 = positions[0]
         pos2 = positions[1]
-        return self.array[pos1][1][pos2][1]
+        return self.array.array[pos1][1].array[pos2][1]
 
     def __setitem__(self, key: tuple[K1, K2], data: V) -> None:
         """
         Set an (key, value) pair in our hash table.
         """
-        positions = self._linear_probe(K1, K2, True)
+        positions = self._linear_probe(key[0], key[1], True)
         pos1 = positions[0]
         pos2 = positions[1]
         self.array[pos1][1][pos2][1] = data
