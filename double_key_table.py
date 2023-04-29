@@ -176,17 +176,19 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         key = None: returns all top-level keys in the table.
         key = x: returns all bottom-level keys for top-level key x.
         """
-        result = list
+        result = []
         if key is None:
-            for i in range(self.table.table_size()):
+            for i in range(self.table.table_size):
                 if self.table.array[i] is not None:
-                    result.append(self.table.array[i][0])
+                    if self.table.array[i][0] is not None:
+                        result.append(self.table.array[i][0])
             return result
         position = self.table._linear_probe(key, False)
         sub_table = self.table.array[position][1]
-        for i in range(sub_table.table_size()):
+        for i in range(sub_table.table_size):
             if sub_table.array[i] is not None:
-                result.append(sub_table.array[i][0])
+                if sub_table.array[i][0] is not None:
+                    result.append(sub_table.array[i][0])
         return result
 
     def iter_values(self, key: K1 | None = None) -> Iterator[V]:
@@ -203,17 +205,22 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         key = None: returns all values in the table.
         key = x: returns all values for top-level key x.
         """
-        # not sure if list is allowed here
-        result = list
+        result = []
         if key is None:
-            for i in range(len(self.table)):
-                if self.table[i][0] is not None:
-                    result.append(self.table[i][1])
+            for i in range(self.table.table_size):
+                if self.table.array[i] is not None:
+                    if self.table.array[i][1] is not None:
+                        sub_table = self.table.array[i][1]
+                        for j in range(sub_table.table_size):
+                            if sub_table.array[j] is not None:
+                                result.append(sub_table.array[j][1])
             return result
-        position = self.hash1(key)
-        for i in range(len(self.table[position][0])):
-            if self.table[position][1][i][0] is not None:
-                result.append(self.table[position][1][i][1])
+        position = self.table._linear_probe(key, False)
+        sub_table = self.table.array[position][1]
+        for i in range(sub_table.table_size):
+            if sub_table.array[i] is not None:
+                if sub_table.array[i][0] is not None:
+                    result.append(sub_table.array[i][1])
         return result
 
     def __contains__(self, key: tuple[K1, K2]) -> bool:
@@ -260,7 +267,6 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         if len(sub_table) > sub_table.table_size/ 2:
             sub_table._rehash()
 
-        print(len(self.table))
         if len(self.table) > self.table_size / 2:
             self.table._rehash()
 
@@ -350,11 +356,11 @@ class DoubleKeyTableIterKeys:
         self.count = 0
         if key is None:
             self.table = double_key_table.table
-            self.max_count = len(self.table)
+            self.max_count = self.table.table_size
         else:
             index = double_key_table.table._linear_probe(key, False)
-            self.table = double_key_table.table[index][1]
-            self.max_count = len(self.table)
+            self.table = double_key_table.table.array[index][1]
+            self.max_count = self.table.table_size
 
     def __iter__(self):
         return self
@@ -363,12 +369,12 @@ class DoubleKeyTableIterKeys:
         found = False
         while not found:
             if self.count < self.max_count:
-                if self.table[self.count] is None:
+                if self.table.array[self.count] is None:
                     self.count += 1
                 else:
                     found = True
                     self.count += 1
-                    return self.table[self.count][0]
+                    return self.table.array[self.count][0]
             else:
                 found = True
         raise StopIteration
@@ -378,13 +384,9 @@ class DoubleKeyTableIterValues:
 
     def __init__(self, double_key_table: DoubleKeyTable, key: K1 | None = None):
         self.count = 0
-        if key is None:
-            self.table = double_key_table.table
-            self.max_count = len(self.table)
-        else:
-            index = double_key_table.table._linear_probe(key, False)
-            self.table = double_key_table.table[index][1]
-            self.max_count = len(self.table)
+        self.all_values = double_key_table.values(key)
+        self.max_count = len(self.all_values)
+
 
     def __iter__(self):
         return self
@@ -393,12 +395,9 @@ class DoubleKeyTableIterValues:
         found = False
         while not found:
             if self.count < self.max_count:
-                if self.table[self.count] is None:
-                    self.count += 1
-                else:
-                    found = True
-                    self.count += 1
-                    return self.table[self.count][1]
+                self.count += 1
+                return self.all_values[self.count]
+                found = True
             else:
                 found = True
         raise StopIteration
