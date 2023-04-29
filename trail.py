@@ -39,19 +39,15 @@ class TrailSeries:
     mountain: Mountain
     following: Trail
 
-    def remove_mountain(self) -> TrailStore:
+    def remove_mountain(self) -> TrailStore: # Similarly to remove its either the current implementation or simple return Trail
         """Removes the mountain at the beginning of this series."""
         return self.following.store
 
     def add_mountain_before(self, mountain: Mountain) -> TrailStore:
         """Adds a mountain in series before the current one."""
-        # The new trail's mountain element will be the new mountain
-        new_mountain = mountain
-        # The new trail's following element will be the old trail
-        new_following = Trail(TrailSeries(self.mountain,self.following))
-        # Contruct a complete trail
-        new_trail = TrailSeries(new_mountain,new_following)
-        return new_trail
+        self.following = self
+        self.mountain = mountain
+        return self
 
     def add_empty_branch_before(self) -> TrailStore:
         """Adds an empty branch, where the current trailstore is now the following path."""
