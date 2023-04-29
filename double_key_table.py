@@ -354,13 +354,8 @@ class DoubleKeyTableIterKeys:
 
     def __init__(self, double_key_table: DoubleKeyTable, key: K1 | None = None):
         self.count = 0
-        if key is None:
-            self.table = double_key_table.table
-            self.max_count = self.table.table_size
-        else:
-            index = double_key_table.table._linear_probe(key, False)
-            self.table = double_key_table.table.array[index][1]
-            self.max_count = self.table.table_size
+        self.all_keys = double_key_table.keys(key)
+        self.max_count = len(self.all_keys)
 
     def __iter__(self):
         return self
@@ -369,12 +364,9 @@ class DoubleKeyTableIterKeys:
         found = False
         while not found:
             if self.count < self.max_count:
-                if self.table.array[self.count] is None:
-                    self.count += 1
-                else:
-                    found = True
-                    self.count += 1
-                    return self.table.array[self.count][0]
+                self.count += 1
+                return self.all_keys[self.count]
+                found = True
             else:
                 found = True
         raise StopIteration
