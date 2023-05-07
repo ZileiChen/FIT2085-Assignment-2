@@ -49,9 +49,13 @@ class TrailSeries:
 
     def add_mountain_before(self, mountain: Mountain) -> TrailStore:
         """Adds a mountain in series before the current one."""
-        self.following = self
-        self.mountain = mountain
-        return self
+        # The new trail's mountain will be new mountain
+        new_mountain = mountain
+        # The new trail's following will be the old trail
+        new_following = Trail(TrailSeries(self.mountain,self.following))
+        # Contruct a new trail
+        new_trail = TrailSeries(new_mountain,new_following)
+        return new_trail
 
     def add_empty_branch_before(self) -> TrailStore:
         """Adds an empty branch, where the current trailstore is now the following path."""
