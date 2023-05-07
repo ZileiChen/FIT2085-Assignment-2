@@ -1,6 +1,10 @@
 from __future__ import annotations
+
+import copy
 from dataclasses import dataclass
 
+from data_structures.linked_stack import LinkedStack
+from data_structures.stack_adt import Stack
 from mountain import Mountain
 
 from typing import TYPE_CHECKING, Union
@@ -82,15 +86,47 @@ class Trail:
 
     def add_mountain_before(self, mountain: Mountain) -> Trail:
         """Adds a mountain before everything currently in the trail."""
-        return Trail(TrailSeries(mountain,self))
+        return Trail(TrailSeries(mountain, self))
 
     def add_empty_branch_before(self) -> Trail:
         """Adds an empty branch before everything currently in the trail."""
-        return Trail(TrailSplit(Trail(None),Trail(None),self))
+        return Trail(TrailSplit(Trail(None), Trail(None), self))
 
     def follow_path(self, personality: WalkerPersonality) -> None:
         """Follow a path and add mountains according to a personality."""
-        raise NotImplementedError()
+
+
+        current_trail = self.store
+        trail_stack = LinkedStack()
+        isCompleted = False;
+
+        while not isCompleted:
+            if isinstance(current_trail, TrailSplit):
+                trail_stack.push(current_trail)
+                if personality.select_branch(current_trail.path_top, current_trail.path_bottom):
+                    current_trail = current_trail.path_top.store
+                else:
+                    current_trail = current_trail.path_bottom.store
+            if isinstance(current_trail, TrailSeries) or current_trail is None:
+                if current_trail is None:
+                    current_trail = trail_stack.pop()
+                    current_trail = current_trail.path_follow.store
+                else:
+                    personality.add_mountain(current_trail.mountain)
+                    if current_trail.following.store is None:
+                        if not trail_stack.is_empty():
+                            current_trail = trail_stack.pop()
+                            current_trail = current_trail.path_follow.store
+                        else:
+                            current_trail = current_trail.following.store
+                    else:
+                        current_trail = current_trail.following.store
+
+
+            if current_trail is None and trail_stack.is_empty():
+                isCompleted = True
+
+
 
     def collect_all_mountains(self) -> list[Mountain]:
         """Returns a list of all mountains on the trail."""
