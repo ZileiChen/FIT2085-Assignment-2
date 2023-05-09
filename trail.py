@@ -133,8 +133,24 @@ class Trail:
 
 
     def collect_all_mountains(self) -> list[Mountain]:
-        """Returns a list of all mountains on the trail."""
-        raise NotImplementedError()
+        """Returns a list of all mountains on the trail.
+        This is done by recursion,
+        If its a split, call this method recursively for path above, below and follow
+        If its a series, add mountain
+        """
+        mountain_list = []
+        self.collect_all_mountains_aux(self, mountain_list)
+
+        return mountain_list
+
+    def collect_all_mountains_aux(self, trail: Trail, mountains: list[Mountain]):
+        if isinstance(trail.store, TrailSplit):
+            self.collect_all_mountains_aux(trail.store.path_follow, mountains)
+            self.collect_all_mountains_aux(trail.store.path_top, mountains)
+            self.collect_all_mountains_aux(trail.store.path_bottom, mountains)
+        elif isinstance(trail.store, TrailSeries):
+            mountains.append(trail.store.mountain)
+            self.collect_all_mountains_aux(trail.store.following, mountains)
 
     def length_k_paths(self, k) -> list[list[Mountain]]: # Input to this should not exceed k > 50, at most 5 branches.
         """
