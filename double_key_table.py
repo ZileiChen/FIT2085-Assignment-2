@@ -30,29 +30,11 @@ class DoubleKeyTable(Generic[K1, K2, V]):
     HASH_BASE = 31
 
     def __init__(self, sizes: list | None = None, internal_sizes: list | None = None) -> None:
-        # Creates a double has table with dimensions sizes*internal_sizes
         """
         check if sizes and internal sizes are none
         if they are none, then use the default list for both internal and outer
-
-        """
-
-        """
-        self.INTERNAL_TABLE_SIZES = self.TABLE_SIZES
-        if sizes is not None:
-            self.TABLE_SIZES = sizes
-        if internal_sizes is not None:
-            self.INTERNAL_TABLE_SIZES = internal_sizes
-        self.size_index = 0
-        self.internal_size_index = 0
-
-        self.table = ArrayR(self.TABLE_SIZES[self.size_index])
-        for i in range(self.TABLE_SIZES[self.size_index]):
-            self.table[i] = ArrayR(self.INTERNAL_TABLE_SIZES[self.internal_size_index])
         """
         self.table = None
-        # self.table = LinearProbeTable(sizes)
-        # self.table.hash = lambda k: self.hash1(k)
         self.internal_sizes = internal_sizes
         self.sizes = sizes
 
@@ -112,55 +94,6 @@ class DoubleKeyTable(Generic[K1, K2, V]):
             sub_table = self.table.array[outer_pos][1]
             inner_pos = sub_table._linear_probe(key2, is_insert)
         return (outer_pos, inner_pos)
-
-        # # Initial position outer table
-        # position_outer = self.hash1(key1)
-        # check_outer = True
-        # for _ in range(self.table.table_size):
-        #     if self.table.table[position_outer][0] is None:
-        #         # Empty spot. Am I upserting or retrieving?
-        #         if is_insert:
-        #             check_outer = False
-        #         else:
-        #             raise KeyError(key1)
-        #     elif self.table.table[position_outer][0] == key1:
-        #         check_outer = False
-        #     else:
-        #         # Taken by something else. Time to linear probe.
-        #         position_outer = (position_outer + 1) % self.table.table_size
-        #
-        # if check_outer:
-        #     if is_insert:
-        #         raise FullError("Table is full!")
-        #     else:
-        #         raise KeyError(key1)
-        #
-        #
-        # # Initial position inner table
-        # hashtable_inner = self.table.table[position_outer][1]
-        # position_inner = self.hash2(key2, hashtable_inner)
-        # check_inner = True
-        # for _ in range(hashtable_inner.table_size):
-        #     if hashtable_inner.table[position_inner] is None:
-        #         # Empty spot. Am I upserting or retrieving?
-        #         if is_insert:
-        #             check_inner = False
-        #         else:
-        #             raise KeyError(key2)
-        #     elif hashtable_inner.table[position_inner][0] == key2:
-        #         check_inner = False
-        #     else:
-        #         # Taken by something else. Time to linear probe.
-        #         position_inner = (position_inner + 1) % hashtable_inner.table_size
-        #
-        # if check_inner:
-        #     if is_insert:
-        #         raise FullError("Table is full!")
-        #     else:
-        #         raise KeyError(key2)
-        #
-        # return (position_outer, position_inner)
-        #
 
     def iter_keys(self, key: K1 | None = None) -> Iterator[K1 | K2]:
         """
@@ -287,32 +220,6 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         if sub_table.is_empty():
             del self.table[key[0]]
 
-
-        # # First delete the item in the inner hash table
-        # positions = self._linear_probe(key[0], key[1], False)
-        # pos1 = positions[0]
-        # pos2 = positions[1]
-        # self.table.array[pos1][1].array[pos2] = None
-        #
-        # # Shuffle the cluster back
-        # sub_table = self.table.array[pos1][1]
-        # pos2 = (pos2 + 1) % sub_table.table_size
-        # while sub_table.array[pos2] is not None:
-        #     key2, value = sub_table.array[pos2]
-        #     sub_table.array[pos2] = None
-        #     # Reinsert.
-        #     sub_table.hash = lambda k: self.hash2(k, sub_table)
-        #     newpos = sub_table._linear_probe(key2, True)
-        #     sub_table.array[newpos] = (key2, value)
-        #     pos2 = (pos2 + 1) % sub_table.table_size
-        #
-        # # If no elements left in the inner hash table, delete the inner hash table
-        # if sub_table.is_empty():
-        #     self.table.array[pos1] = None
-        #
-        # # Shuffle the outer cluster
-
-
     def _rehash(self) -> None:
         """
         Need to resize table and reinsert all values
@@ -343,11 +250,6 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         Not required but may be a good testing tool.
         """
         raise NotImplementedError()
-
-
-"""
-i think an iterator class is required to complete iterators
-"""
 
 
 class DoubleKeyTableIterKeys:
