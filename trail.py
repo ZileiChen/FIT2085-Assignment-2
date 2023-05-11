@@ -151,7 +151,7 @@ class Trail:
         elif isinstance(trail.store, TrailSeries):
             mountains.append(trail.store.mountain)
             self.collect_all_mountains_aux(trail.store.following, mountains)
-
+    
     def length_k_paths(self, k) -> list[list[Mountain]]: # Input to this should not exceed k > 50, at most 5 branches.
         """
         Returns a list of all paths of containing exactly k mountains.
@@ -159,4 +159,91 @@ class Trail:
 
         Paths are unique if they take a different branch, even if this results in the same set of mountains.
         """
-        raise NotImplementedError()
+        """
+        Args: k, indiacting the max length of the path
+        Raises: None
+        Returns: list of paths with length k
+        Complexity: 
+          Best case = O(1): No split path
+          Worst case = O(k*m): when k & m reach maximum
+          (k: max length of path, m: max branch)
+        """
+        # Initialize list of paths and individual path as a list
+        path_list = []
+        path1 = []
+        path2 = []
+        # Traverse through the rail: If current path is Split type
+        if (isinstance(self.store,TrailSplit)):
+            # Investigate top path
+            if(self.store.path_top.store is not None):
+                # Do recursion to investigate sub-path, create a stack to store
+                stack = self.store.path_top.length_k_paths(k)
+                # If the sub-path is just a mountain
+                if (type(stack) is Mountain):
+                    path1.append(stack)
+                    path1.append(self.store.path_follow.length_k_paths(k))
+                    # If length of path = k, add path to path list
+                    if len(path1) == k:
+                        path_list.append(path1)
+                # If the sub-path is a Trail
+                elif (stack is not None):
+                    for i in range(len(stack)):
+                        path1.append(stack.pop())
+                        if (self.store.path_follow.store is not None):
+                            path1[i].append(self.store.path_follow.length_k_paths(k))
+                            # If length of path = k, add path to path list
+                            if (len(path1[i]) == k):
+                                path_list.append(path1[i])
+            # Investigate bottom path
+            if(self.store.path_top.store is not None):
+                stack = self.store.path_bottom.length_k_paths(k)
+                # If the sub-path is just a mountain
+                if (type(stack) is Mountain):
+                    path2.append(stack)
+                    path2.append(self.store.path_follow.length_k_paths(k))
+                    # If length of path = k, add path to path list
+                    if (len(path2) == k):
+                        path_list.append(path2)
+                # If the sub-path is a Trail
+                elif (stack is not None):
+                    for i in range(len(stack)):
+                        path2.append(stack.pop())
+                        if (self.store.path_follow.store is not None):
+                            path2[i].append(self.store.path_follow.length_k_paths(k))
+                            # If length of path = k, add path to path list
+                            if (len(path2[i]) == k):
+                                path_list.append(path2[i])
+            # If there is path in path list, return path_list
+            if len(path_list) != 0:
+                return path_list  
+            # Else: return element for recursion         
+            if path2 == []:
+                return path1               
+            return [path1,path2]
+        # Traverse through the rail: If current path is Series type
+        elif(isinstance(self.store, TrailSeries)):
+            # If the following in Trail is not None
+            if(self.store.following.store is not None):
+                path1 = []
+                path1.append(self.store.mountain)
+                # If the following is just a mountain
+                if (type(self.store.following.length_k_paths(k)[0]) is Mountain):
+                    path1.append(self.store.following.length_k_paths(k)[0])
+                    # If the following is a sub-trail
+                    if self.store.following.length_k_paths(k)[1] is not None:
+                        path2.append(self.store.mountain)
+                        path2.append(self.store.following.length_k_paths(k)[1])
+                        # If length of path = k, add path to path list
+                        if (len(path1[i]) == k):
+                            path_list.append(path1[i])
+                        # Return all components in the series trail
+                        return [path1,path2]
+                    # Return mountain+following
+                    return [path1]
+            # If there is only Mountain in the Trail, return mountain
+            else:
+                return self.store.mountain
+        # If the investigated trail is None, do nothing
+        return
+                  
+
