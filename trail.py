@@ -175,7 +175,7 @@ class Trail:
         Raises: None
         Returns: list of paths with length k
         Complexity: 
-          Best case = O(1): No split path
+          Best case = O(k): No split path (m = 0)
           Worst case = O(k*m): when k & m reach maximum
           (k: max length of path, m: max branch)
         """
