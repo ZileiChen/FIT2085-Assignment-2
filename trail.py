@@ -104,7 +104,8 @@ class Trail:
 
     def follow_path(self, personality: WalkerPersonality) -> None:
         """Follow a path and add mountains according to a personality.
-        :complexity: O(comp*N) where n is the number of mountains in this trail.
+        :complexity: Worst case: O(comp*N) where n is the number of mountains in this trail and all on a singular path.
+        Best case O(1) where the trail only has 1 mountain or no mountains at all.
         """
         current_trail = self.store
         trail_stack = LinkedStack()

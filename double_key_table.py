@@ -33,6 +33,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         """
         check if sizes and internal sizes are none
         if they are none, then use the default list for both internal and outer
+        :complexity: O(1) as we are initialising variables
         """
         self.table = None
         self.internal_sizes = internal_sizes
@@ -73,6 +74,9 @@ class DoubleKeyTable(Generic[K1, K2, V]):
 
         :raises KeyError: When the key pair is not in the table, but is_insert is False.
         :raises FullError: When a table is full and cannot be inserted.
+
+        :complexity: O(n*m*comp) when we search through the entire outside and inside table,
+         where n and m are the sizes of the outer and inner tables respectively.
         """
         if self.table is None:
             self.table = LinearProbeTable(self.sizes)
@@ -108,6 +112,8 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         """
         key = None: returns all top-level keys in the table.
         key = x: returns all bottom-level keys for top-level key x.
+        :complexity: O(n*m*comp) when key is not None, and we search through the entire outer table and the entire inner
+        table.
         """
         result = []
         if key is None:
@@ -137,6 +143,8 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         """
         key = None: returns all values in the table.
         key = x: returns all values for top-level key x.
+        :complexity: O(n*m*comp) when key is not None, and we search through the entire outer table and the entire inner
+        table.
         """
         result = []
         if key is None:
@@ -253,8 +261,16 @@ class DoubleKeyTable(Generic[K1, K2, V]):
 
 
 class DoubleKeyTableIterKeys:
+    """
+    Iterable class for DoubleKeyTable. Returns all the keys in the object.
+    """
 
     def __init__(self, double_key_table: DoubleKeyTable, key: K1 | None = None):
+        """
+        Initialises the iteration. Will return the upper level keys if key is None, otherwise it will return the lower
+        level key for that specified key.
+        :complexity: O(1)
+        """
         self.count = 0
         self.all_keys = double_key_table.keys(key)
         self.max_count = len(self.all_keys)
@@ -263,6 +279,11 @@ class DoubleKeyTableIterKeys:
         return self
 
     def __next__(self):
+        """
+        Returns the next value of the iteration.
+        :raises StopIteration: when all valid keys have been returned.
+        :complexity: O(comp)
+        """
         found = False
         while not found:
             if self.count < self.max_count:
@@ -275,8 +296,15 @@ class DoubleKeyTableIterKeys:
 
 
 class DoubleKeyTableIterValues:
-
+    """
+    Iterable class for DoubleKeyTable. Returns all the values in the object.
+    """
     def __init__(self, double_key_table: DoubleKeyTable, key: K1 | None = None):
+        """
+        Initialises the iteration. Will return all values if key is None, otherwise it will return the values for that
+        specified key.
+        :complexity: O(1)
+        """
         self.count = 0
         self.all_values = double_key_table.values(key)
         self.max_count = len(self.all_values)
@@ -286,6 +314,11 @@ class DoubleKeyTableIterValues:
         return self
 
     def __next__(self):
+        """
+        Returns the next value of the iteration.
+        :raises StopIteration: when all valid values have been returned.
+        :complexity: O(comp)
+        """
         found = False
         while not found:
             if self.count < self.max_count:
