@@ -275,10 +275,10 @@ class DoubleKeyTableIterKeys:
         self.all_keys = double_key_table.keys(key)
         self.max_count = len(self.all_keys)
 
-    def __iter__(self):
+    def __iter__(self) -> DoubleKeyTableIterKeys:
         return self
 
-    def __next__(self):
+    def __next__(self) -> V:
         """
         Returns the next value of the iteration.
         :raises StopIteration: when all valid keys have been returned.
@@ -310,10 +310,10 @@ class DoubleKeyTableIterValues:
         self.max_count = len(self.all_values)
 
 
-    def __iter__(self):
+    def __iter__(self) -> DoubleKeyTableIterValues:
         return self
 
-    def __next__(self):
+    def __next__(self) -> V:
         """
         Returns the next value of the iteration.
         :raises StopIteration: when all valid values have been returned.

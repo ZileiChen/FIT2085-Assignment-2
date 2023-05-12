@@ -143,13 +143,18 @@ class Trail:
         This is done by recursion,
         If its a split, call this method recursively for path above, below and follow
         If its a series, add mountain
+        :complexity: O(collect_all_mountains_aux)
         """
         mountain_list = []
         self.collect_all_mountains_aux(self, mountain_list)
-
         return mountain_list
 
-    def collect_all_mountains_aux(self, trail: Trail, mountains: list[Mountain]):
+    def collect_all_mountains_aux(self, trail: Trail, mountains: list[Mountain]) -> None:
+        """
+        Returns a list of all the mountains in the trail through recursion.
+        :complexity: O(append*n) where n is the number of TrailStores in this trail. This includes the path_follow,
+        path_top, path_bottom and following attributes within those TrailStores.
+        """
         if isinstance(trail.store, TrailSplit):
             self.collect_all_mountains_aux(trail.store.path_follow, mountains)
             self.collect_all_mountains_aux(trail.store.path_top, mountains)
