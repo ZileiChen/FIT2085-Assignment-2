@@ -4,7 +4,6 @@ import copy
 from dataclasses import dataclass
 
 from data_structures.linked_stack import LinkedStack
-from data_structures.stack_adt import Stack
 from mountain import Mountain
 
 from typing import TYPE_CHECKING, Union
@@ -28,7 +27,10 @@ class TrailSplit:
     path_follow: Trail
 
     def remove_branch(self) -> TrailStore:
-        """Removes the branch, should just leave the remaining following trail."""
+        """
+        Removes the branch, should just leave the remaining following trail.
+        :complexity: O(1)
+        """
         return self.path_follow.store
 
 @dataclass
@@ -44,11 +46,15 @@ class TrailSeries:
     following: Trail
 
     def remove_mountain(self) -> TrailStore: # Similarly to remove its either the current implementation or simple return Trail
-        """Removes the mountain at the beginning of this series."""
+        """Removes the mountain at the beginning of this series Returns The following trail.
+        :complexity: O(1)
+        """
         return self.following.store
 
     def add_mountain_before(self, mountain: Mountain) -> TrailStore:
-        """Adds a mountain in series before the current one."""
+        """Adds a mountain in series before the current one. Returns the resulting Trail
+        :complexity: O(1)
+        """
         # The new trail's mountain will be new mountain
         new_mountain = mountain
         # The new trail's following will be the old trail
@@ -97,9 +103,9 @@ class Trail:
         return Trail(TrailSplit(Trail(None), Trail(None), self))
 
     def follow_path(self, personality: WalkerPersonality) -> None:
-        """Follow a path and add mountains according to a personality."""
-
-
+        """Follow a path and add mountains according to a personality.
+        :complexity: O(comp*N) where n is the number of mountains in this trail.
+        """
         current_trail = self.store
         trail_stack = LinkedStack()
         isCompleted = False;
@@ -125,7 +131,6 @@ class Trail:
                             current_trail = current_trail.following.store
                     else:
                         current_trail = current_trail.following.store
-
 
             if current_trail is None and trail_stack.is_empty():
                 isCompleted = True
